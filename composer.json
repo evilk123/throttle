@@ -1,11 +1,13 @@
 {
     "name": "evilk/hello",
+    "description": "just for test to echo hello",
     "authors": [
         {
             "name": "evilk",
             "email": "540621396@qq.com"
         }
     ],
+    "license": "MIT",
     "require": {
         "php": ">=7.1.0"
     },

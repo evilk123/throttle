@@ -1,7 +1,9 @@
 <?php
 
-namespace Tool;
-
 require dirname(__DIR__) . "/vendor/autoload.php";
 
+use Tool\EchoHello;
+
 EchoHello::echoHello();
+
+
