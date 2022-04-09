@@ -78,7 +78,7 @@ class Throttle
      */
     public function __construct(array $params = [])
     {
-        $this->config = array_merge(static::$default_config, Config::get('plugin.evilk123.throttle.app',[]), $params);
+        $this->config = array_merge(static::$default_config, Config::get('throttle',[]), $params);
         $this->cache  = Container::make($this->config['cache_drive'], []);
     }
 
