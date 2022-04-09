@@ -39,5 +39,4 @@ abstract class ThrottleAbstract
     {
         return $this->cur_requests;
     }
-
 }

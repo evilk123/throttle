@@ -13,14 +13,16 @@ namespace evilk123\middleware;
 use Psr\SimpleCache\CacheInterface;
 use evilk123\middleware\throttle\{CounterFixed, ThrottleAbstract};
 use Webman\Config;
-use support\{Container, Cache, Request};
+use support\{Container, Cache};
+use Webman\Http\Request;
 use Webman\Http\Response;
 use function sprintf;
 
 /**
- * 访问频率限制中间件
+ * 限流中间件
+ *
  * Class Throttle
- * @package app\middleware\Throttle
+ * @package evilk123\middleware
  */
 class Throttle
 {
@@ -29,16 +31,16 @@ class Throttle
      * @var array
      */
     public static $default_config = [
-        'prefix'                       => 'throttle_',                    // 缓存键前缀，防止键与其他应用冲突
-        'key'                          => true,                           // 节流规则 true为自动规则
-        'visit_method'                 => ['GET', 'HEAD'],          // 要被限制的请求类型
-        'visit_rate'                   => null,                       // 节流频率 null 表示不限制 eg: 10/m  20/h  300/d
+        'prefix' => 'throttle_',                    // 缓存键前缀，防止键与其他应用冲突
+        'key' => true,                           // 节流规则 true为自动规则
+        'visit_method' => ['GET', 'HEAD'],          // 要被限制的请求类型
+        'visit_rate' => null,                       // 节流频率 null 表示不限制 eg: 10/m  20/h  300/d
         'visit_enable_show_rate_limit' => true,     // 在响应体中设置速率限制的头部信息
-        'visit_fail_code'              => 429,                   // 访问受限时返回的http状态码，当没有visit_fail_response时生效
-        'visit_fail_text'              => 'Too Many Requests',   // 访问受限时访问的文本信息，当没有visit_fail_response时生效
-        'visit_fail_response'          => null,              // 访问受限时的响应信息闭包回调
-        'driver_name'                  => CounterFixed::class,       // 限流算法驱动
-        'cache_drive'                  => Cache::class               // 缓存驱动
+        'visit_fail_code' => 429,                   // 访问受限时返回的http状态码，当没有visit_fail_response时生效
+        'visit_fail_text' => 'Too Many Requests',   // 访问受限时访问的文本信息，当没有visit_fail_response时生效
+        'visit_fail_response' => null,              // 访问受限时的响应信息闭包回调
+        'driver_name' => CounterFixed::class,       // 限流算法驱动
+        'cache_drive' => Cache::class               // 缓存驱动
     ];
 
     public static $duration = [
@@ -78,8 +80,8 @@ class Throttle
      */
     public function __construct(array $params = [])
     {
-        $this->config = array_merge(static::$default_config, Config::get('throttle',[]), $params);
-        $this->cache  = Container::make($this->config['cache_drive'], []);
+        $this->config = array_merge(static::$default_config, Config::get('throttle', []), $params);
+        $this->cache = Container::make($this->config['cache_drive'], []);
     }
 
     /**
@@ -101,7 +103,7 @@ class Throttle
         [$max_requests, $duration] = $this->parseRate($this->config['visit_rate']);
 
         $micronow = microtime(true);
-        $now      = (int)$micronow;
+        $now = (int)$micronow;
 
         $this->driver_class = Container::make($this->config['driver_name'], []);
         if (!$this->driver_class instanceof ThrottleAbstract) {
@@ -111,10 +113,10 @@ class Throttle
 
         if ($allow) {
             // 允许访问
-            $this->now          = $now;
-            $this->expire       = $duration;
+            $this->now = $now;
+            $this->expire = $duration;
             $this->max_requests = $max_requests;
-            $this->remaining    = $max_requests - $this->driver_class->getCurRequests();
+            $this->remaining = $max_requests - $this->driver_class->getCurRequests();
             return true;
         }
 
@@ -131,7 +133,6 @@ class Throttle
      */
     public function handle(Request $request, callable $next, array $params = []): Response
     {
-
         if ($params) {
             $this->config = array_merge($this->config, $params);
         }
@@ -191,7 +192,7 @@ class Throttle
     {
         [$num, $period] = explode("/", $rate);
         $max_requests = (int)$num;
-        $duration     = static::$duration[$period] ?? (int)$period;
+        $duration = static::$duration[$period] ?? (int)$period;
         return [$max_requests, $duration];
     }
 
@@ -235,9 +236,9 @@ class Throttle
     public function getRateLimitHeaders(): array
     {
         return [
-            'X-Rate-Limit-Limit'     => $this->max_requests,
+            'X-Rate-Limit-Limit' => $this->max_requests,
             'X-Rate-Limit-Remaining' => max($this->remaining, 0),
-            'X-Rate-Limit-Reset'     => $this->now + $this->expire,
+            'X-Rate-Limit-Reset' => $this->now + $this->expire,
         ];
     }
 
@@ -256,7 +257,7 @@ class Throttle
                 throw new \TypeError(sprintf('The closure must return %s instance', Response::class));
             }
         } else {
-            $content  = str_replace('__WAIT__', (string)$wait_seconds, $this->config['visit_fail_text']);
+            $content = str_replace('__WAIT__', (string)$wait_seconds, $this->config['visit_fail_text']);
             $response = new Response($this->config['visit_fail_code'], [], $content);
         }
         if ($this->config['visit_enable_show_rate_limit']) {

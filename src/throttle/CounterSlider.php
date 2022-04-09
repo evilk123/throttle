@@ -2,7 +2,6 @@
 
 namespace evilk123\middleware\throttle;
 
-
 /**
  * 计数器滑动窗口算法
  * Class CouterSlider
@@ -10,10 +9,10 @@ namespace evilk123\middleware\throttle;
  */
 class CounterSlider extends ThrottleAbstract
 {
-    public function allowRequest(string $key, float $micronow, int $max_requests, int $duration,  $cache): bool
+    public function allowRequest(string $key, float $micronow, int $max_requests, int $duration, $cache): bool
     {
         $history = $cache::get($key, []);
-        $now     = (int)$micronow;
+        $now = (int)$micronow;
         // 移除过期的请求的记录
         $history = array_values(array_filter($history, function ($val) use ($now, $duration) {
             return $val >= $now - $duration;
@@ -28,11 +27,10 @@ class CounterSlider extends ThrottleAbstract
         }
 
         if ($history) {
-            $wait_seconds       = $duration - ($now - $history[0]) + 1;
+            $wait_seconds = $duration - ($now - $history[0]) + 1;
             $this->wait_seconds = max($wait_seconds, 0);
         }
 
         return false;
     }
-
 }
