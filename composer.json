@@ -1,5 +1,5 @@
 {
-    "name": "evilk123/webman-throttle",
+    "name": "evilk123/throttle",
     "description": "webman-限流中间件",
     "type": "library",
     "authors": [
