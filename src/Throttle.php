@@ -180,7 +180,7 @@ class Throttle
                 strtolower(trim($key))
             );
         }
-        return md5($this->config['prefix'] . $key . $this->config['driver_name']);
+        return $this->config['prefix'] . md5($key . $this->config['driver_name']);
     }
 
     /**
